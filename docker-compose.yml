@@ -1,0 +1,22 @@
+version: '3.8'
+services:
+  # Banco de Dados MySQL Requerido
+  mysql-db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: estapar_db
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  # Simulador da Estapar (Conforme instruções)
+  garage-sim:
+    image: cfontes0estapar/garage-sim:1.0.0
+    network_mode: "host" # O simulador exige network host para enviar webhooks para localhost:3003
+    depends_on:
+      - mysql-db # Apenas garantindo a ordem de subida, se necessário
+
+volumes:
+  db_data:
