@@ -12,18 +12,11 @@ public class Ticket {
     private String sector;
     private LocalDateTime entryTime;
     private LocalDateTime exitTime;
-
-    // Preço base calculado assim que assumida uma Entry
     private BigDecimal pricePerContext;
-
     private BigDecimal finalAmount;
-    public BigDecimal getFinalAmount() {
-        return this.finalAmount;
-    }
-
     private TicketStatus status;
 
-    // Constructor para criar um novo Ticket na Entry
+    // Constructor para criar um novo Ticket na Entry (Regra de Negócio)
     public Ticket(String licensePlate, String sector, LocalDateTime entryTime, BigDecimal pricePerContext) {
         this.licensePlate = licensePlate;
         this.sector = sector;
@@ -32,7 +25,8 @@ public class Ticket {
         this.status = TicketStatus.ACTIVE;
     }
 
-    // Métodos de negócio
+    // Métodos de Negócio
+
     public void registerExit(LocalDateTime exitTime) {
         if (this.status != TicketStatus.ACTIVE) {
             throw new IllegalStateException("Ticket já finalizado.");
@@ -44,18 +38,30 @@ public class Ticket {
 
     private BigDecimal calculateTotal() {
         if (exitTime == null || entryTime == null) return BigDecimal.ZERO;
-
         long minutes = Duration.between(entryTime, exitTime).toMinutes();
-
-        // Primeiros 30min grátis
-        if (minutes <= 30) {
-            return BigDecimal.ZERO;
-        }
-
-        // Regra de arredondamento do horário 30min = 1 hora...
+        if (minutes <= 30) return BigDecimal.ZERO;
         long hoursCharged = (long) Math.ceil((double) minutes / 60);
-
         return pricePerContext.multiply(BigDecimal.valueOf(hoursCharged))
                 .setScale(2, RoundingMode.HALF_UP);
     }
+
+    // Getters
+
+    public Long getId() { return id; }
+    public String getLicensePlate() { return licensePlate; }
+    public String getSector() { return sector; }
+    public LocalDateTime getEntryTime() { return entryTime; }
+    public LocalDateTime getExitTime() { return exitTime; }
+    public BigDecimal getPricePerContext() { return pricePerContext; }
+    public BigDecimal getFinalAmount() { return finalAmount; }
+    public TicketStatus getStatus() { return status; }
+
+    // Setters
+
+    public void setId(Long id) { this.id = id; }
+
+    // Setters abaixo são usados apenas pela Infra para reconstituir o estado
+    public void setExitTime(LocalDateTime exitTime) { this.exitTime = exitTime; }
+    public void setFinalAmount(BigDecimal finalAmount) { this.finalAmount = finalAmount; }
+    public void setStatus(TicketStatus status) { this.status = status; }
 }

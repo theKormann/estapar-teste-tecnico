@@ -30,7 +30,7 @@ public class HandleEntryUseCaseImpl implements ParkingOperationsUseCase {
         long capacity = garageConfigPort.getSectorCapacity(sector);
         long occupancy = garageConfigPort.getCurrentOccupancy(sector);
 
-        // Condição que verifica se está ocupado o setor.
+        // IMPORTANTE: "não permita novas entradas" se estiver cheio
         if (occupancy >= capacity) {
             throw new ParkingFullException(sector);
         }
@@ -38,7 +38,7 @@ public class HandleEntryUseCaseImpl implements ParkingOperationsUseCase {
         // Busca do Preço Base da Garagem para aquele setor
         BigDecimal basePrice = garageConfigPort.getBasePrice(sector);
 
-        // Preço Dinâmico, atendendo o estado atual da ocupação
+        // IMPORTANTE: conforme a regra de "preço dinâmico... na hora da entrada"
         BigDecimal factor = PricingPolicy.calculateDynamicFactor(occupancy, capacity);
 
         // Calculo do preço final que vai valer para o cliente
@@ -49,7 +49,7 @@ public class HandleEntryUseCaseImpl implements ParkingOperationsUseCase {
                 command.licensePlate(),
                 sector,
                 command.entryTime(),
-                priceToCharge // Salvamos o preço fixado na entrada
+                priceToCharge // preço na hora da entrada do veículo
         );
 
         // Ao salvar, o Adapter do banco deve se encarregar de incrementar a ocupação
