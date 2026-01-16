@@ -17,6 +17,10 @@ public class Ticket {
     private BigDecimal pricePerContext;
 
     private BigDecimal finalAmount;
+    public BigDecimal getFinalAmount() {
+        return this.finalAmount;
+    }
+
     private TicketStatus status;
 
     // Constructor para criar um novo Ticket na Entry
