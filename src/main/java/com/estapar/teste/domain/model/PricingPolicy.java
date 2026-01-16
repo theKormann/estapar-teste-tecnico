@@ -21,7 +21,7 @@ public class PricingPolicy {
         if (percentage < 0.25) {
             return new BigDecimal("0.90"); // Desconto de 10%
         } else if (percentage < 0.50) {
-            return BigDecimal.ONE; // Sem alteração
+            return new BigDecimal("1.00");
         } else if (percentage < 0.75) {
             return new BigDecimal("1.10"); // Aumento de 10%
         } else {

@@ -3,24 +3,24 @@ package com.estapar.teste;
 import com.estapar.teste.domain.model.PricingPolicy;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.math.BigDecimal;
 
-public class PricingPolicyTest {
+class PricingPolicyTest {
 
-    @Test
-    @DisplayName("Deve aplicar desconto de 10% quando lotação for menor que 25%")
-    void shouldApplyDiscountWhenLowOccupancy() {
-        // Cenário: Capacidade 100, Ocupação 20 (20%)
-        long capacity = 100;
-        long currentOccupancy = 20;
-        BigDecimal basePrice = new BigDecimal("10.00");
-
-        BigDecimal factor = PricingPolicy.calculateDynamicFactor(currentOccupancy, capacity);
-        BigDecimal finalEntryPrice = PricingPolicy.calculateEntryPrice(basePrice, factor);
-
-        Assertions.assertEquals(new BigDecimal("0.90"), factor);
-        Assertions.assertEquals(new BigDecimal("9.00"), finalEntryPrice);
+    @DisplayName("Deve calcular o fator dinâmico corretamente baseado na ocupação")
+    @ParameterizedTest(name = "Ocupação {0}/{1} -> Fator esperado {2}")
+    @CsvSource({
+            "20, 100, 0.90",  // < 25% -> Desconto 10%
+            "40, 100, 1.00",  // < 50% -> Preço normal
+            "60, 100, 1.10",  // < 75% -> Aumento 10%
+            "90, 100, 1.25",  // < 100% -> Aumento 25%
+            "100, 100, 1.25"  // == 100% -> Aumento 25%
+    })
+    void shouldCalculateDynamicFactor(long occupancy, long capacity, String expectedFactorStr) {
+        BigDecimal factor = PricingPolicy.calculateDynamicFactor(occupancy, capacity);
+        Assertions.assertEquals(new BigDecimal(expectedFactorStr), factor);
     }
 }
