@@ -1,8 +1,8 @@
 package com.estapar.teste.infrastructure.adapters.in.web;
 
-import com.estapar.teste.application.ports.in.EntryCommand;
-import com.estapar.teste.application.ports.in.ParkedCommand;
-import com.estapar.teste.application.ports.in.ParkingOperationsUseCase;
+import com.estapar.teste.application.ports.in.*;
+import com.estapar.teste.application.ports.in.EntryUseCase;
+import com.estapar.teste.application.ports.in.ParkedUseCase;
 import com.estapar.teste.domain.model.Ticket;
 import com.estapar.teste.infrastructure.adapters.in.web.dto.WebhookEventRequest;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +16,8 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j // logs do lombok
 public class WebhookController {
 
-    private final ParkingOperationsUseCase parkingOperationsUseCase;
+    private final ParkedUseCase parkedUseCase;
+    private final EntryUseCase entryUseCase;
 
     @PostMapping
     public ResponseEntity<Void> handleEvent(@RequestBody WebhookEventRequest request) {
@@ -48,7 +49,7 @@ public class WebhookController {
                 request.entryTime()
         );
 
-        Ticket ticket = parkingOperationsUseCase.handleEntry(command);
+        Ticket ticket = entryUseCase.handleEntry(command);
         log.info("✅ Ticket criado com sucesso: ID={}, Valor Base={}", ticket.getId(), ticket.getPricePerContext());
     }
 
@@ -58,6 +59,6 @@ public class WebhookController {
                 request.lat(),
                 request.lng()
         );
-        parkingOperationsUseCase.handleParked(command);
+        parkedUseCase.handleParked(command);
     }
 }

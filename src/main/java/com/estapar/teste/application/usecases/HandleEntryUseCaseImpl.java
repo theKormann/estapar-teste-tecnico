@@ -1,7 +1,7 @@
 package com.estapar.teste.application.usecases;
 
 import com.estapar.teste.application.ports.in.EntryCommand;
-import com.estapar.teste.application.ports.in.ParkingOperationsUseCase;
+import com.estapar.teste.application.ports.in.EntryUseCase;
 import com.estapar.teste.application.ports.out.GarageConfigRepositoryPort;
 import com.estapar.teste.application.ports.out.TicketRepositoryPort;
 import com.estapar.teste.domain.exception.ParkingFullException;
@@ -19,7 +19,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class HandleEntryUseCaseImpl implements ParkingOperationsUseCase {
+public class HandleEntryUseCaseImpl implements EntryUseCase {
 
     private final GarageConfigRepositoryPort garageConfigPort;
     private final TicketRepositoryPort ticketRepositoryPort;
