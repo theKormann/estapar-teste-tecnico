@@ -6,53 +6,74 @@ import com.estapar.teste.application.ports.out.GarageConfigRepositoryPort;
 import com.estapar.teste.application.ports.out.TicketRepositoryPort;
 import com.estapar.teste.domain.exception.ParkingFullException;
 import com.estapar.teste.domain.model.PricingPolicy;
+import com.estapar.teste.domain.model.Sector;
 import com.estapar.teste.domain.model.Ticket;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Service
-@RequiredArgsConstructor // @ Cria construtor para dependências automáticas
+@RequiredArgsConstructor
+@Slf4j
 public class HandleEntryUseCaseImpl implements ParkingOperationsUseCase {
 
-    // Portas de Saída (BANCO)
     private final GarageConfigRepositoryPort garageConfigPort;
     private final TicketRepositoryPort ticketRepositoryPort;
 
     @Override
-    @Transactional // Garante que tudo aconteça numa transação atômica
+    @Transactional
     public Ticket handleEntry(EntryCommand command) {
-        String sector = command.sector();
+        // 1. Buscar todos os setores disponíveis na garagem
+        List<Sector> allSectors = garageConfigPort.findAllSectors();
 
-        // Busca de Capacidade e ocupação do setor
-        long capacity = garageConfigPort.getSectorCapacity(sector);
-        long occupancy = garageConfigPort.getCurrentOccupancy(sector);
+        // 2. Lógica de Alocação: Encontrar o primeiro setor que NÃO esteja lotado
+        Sector selectedSector = null;
+        long currentOccupancyOfSelected = 0;
 
-        // IMPORTANTE: "não permite novas entradas" se o setor estiver cheio
-        if (occupancy >= capacity) {
-            throw new ParkingFullException(sector);
+        for (Sector sector : allSectors) {
+            long occupancy = garageConfigPort.getCurrentOccupancy(sector.code());
+
+            // Se tem vaga, escolhe este setor e para a busca
+            if (occupancy < sector.capacity()) {
+                selectedSector = sector;
+                currentOccupancyOfSelected = occupancy;
+                break;
+                // Feature: Poderíamos iterar todos e pegar o "menos ocupado" (Load Balancing)
+            }
         }
 
-        // Busca do Preço Base da Garagem para aquele setor
-        BigDecimal basePrice = garageConfigPort.getBasePrice(sector);
+        // 3. Se rodou tudo e não achou setor, a garagem inteira está cheia
+        if (selectedSector == null) {
+            log.warn("⛔ Garagem lotada! Entrada rejeitada para placa {}", command.licensePlate());
+            throw new ParkingFullException("GARAGEM_COMPLETA");
+        }
 
-        // IMPORTANTE: conforme a regra de "preço dinâmico... na hora da entrada"
-        BigDecimal factor = PricingPolicy.calculateDynamicFactor(occupancy, capacity);
+        log.info("✅ Veículo {} alocado para o Setor {} (Ocupação: {}/{})",
+                command.licensePlate(), selectedSector.code(), currentOccupancyOfSelected, selectedSector.capacity());
 
-        // Calculo do preço final que vai valer para o cliente
-        BigDecimal priceToCharge = PricingPolicy.calculateEntryPrice(basePrice, factor);
-
-        // Aqui estou iniciando a Entry(Ticket) com base no HandleEntryUseCaseImpl
-        Ticket newTicket = new Ticket(
-                command.licensePlate(),
-                sector,
-                command.entryTime(),
-                priceToCharge // preço na hora da entrada do veículo
+        // 4. Calcular Preço Dinâmico
+        BigDecimal dynamicFactor = PricingPolicy.calculateDynamicFactor(
+                currentOccupancyOfSelected,
+                selectedSector.capacity()
         );
 
-        // Ao salvar, o Adapter do banco deve se encarregar de incrementar a ocupação
+        BigDecimal finalEntryPrice = PricingPolicy.calculateEntryPrice(
+                selectedSector.basePrice(),
+                dynamicFactor
+        );
+
+        // 5. Criar e Salvar o Ticket
+        Ticket newTicket = new Ticket(
+                command.licensePlate(),
+                selectedSector.code(), // O sistema decide o sector
+                command.entryTime(),
+                finalEntryPrice
+        );
+
         return ticketRepositoryPort.save(newTicket);
     }
 }
