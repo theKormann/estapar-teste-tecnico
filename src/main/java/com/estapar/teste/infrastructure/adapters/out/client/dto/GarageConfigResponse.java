@@ -1,4 +1,8 @@
 package com.estapar.teste.infrastructure.adapters.out.client.dto;
 
-public class GarageConfigResponse {
-}
+import java.util.List;
+
+public record GarageConfigResponse(
+        List<SectorConfigDTO> garage,
+        List<SpotDTO> spots
+) {}

@@ -30,7 +30,7 @@ public class HandleEntryUseCaseImpl implements ParkingOperationsUseCase {
         long capacity = garageConfigPort.getSectorCapacity(sector);
         long occupancy = garageConfigPort.getCurrentOccupancy(sector);
 
-        // IMPORTANTE: "não permita novas entradas" se estiver cheio
+        // IMPORTANTE: "não permite novas entradas" se o setor estiver cheio
         if (occupancy >= capacity) {
             throw new ParkingFullException(sector);
         }
