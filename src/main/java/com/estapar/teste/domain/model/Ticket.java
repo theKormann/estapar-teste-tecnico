@@ -16,6 +16,10 @@ public class Ticket {
     private BigDecimal finalAmount;
     private TicketStatus status;
 
+    // Campos para o evento PARKED
+    private Double lat;
+    private Double lng;
+
     // Constructor para criar um novo Ticket na Entry (Regra de Negócio)
     public Ticket(String licensePlate, String sector, LocalDateTime entryTime, BigDecimal pricePerContext) {
         this.licensePlate = licensePlate;
@@ -45,8 +49,19 @@ public class Ticket {
                 .setScale(2, RoundingMode.HALF_UP);
     }
 
+    // Método de Negócio para processar o PARKED
+    public void confirmParking(Double lat, Double lng) {
+        if (this.status != TicketStatus.ACTIVE) {
+            throw new IllegalStateException("Não é possível estacionar um ticket inativo.");
+        }
+        this.lat = lat;
+        this.lng = lng;
+    }
+
     // Getters
 
+    public Double getLat() { return lat; }
+    public Double getLng() { return lng; }
     public Long getId() { return id; }
     public String getLicensePlate() { return licensePlate; }
     public String getSector() { return sector; }
@@ -59,6 +74,8 @@ public class Ticket {
     // Setters
 
     public void setId(Long id) { this.id = id; }
+    public void setLat(Double lat) { this.lat = lat; }
+    public void setLng(Double lng) { this.lng = lng; }
 
     // Setters abaixo são usados apenas pela Infra para reconstituir o estado
     public void setExitTime(LocalDateTime exitTime) { this.exitTime = exitTime; }

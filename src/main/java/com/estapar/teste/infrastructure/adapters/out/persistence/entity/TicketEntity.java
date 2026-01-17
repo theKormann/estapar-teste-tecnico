@@ -28,4 +28,9 @@ public class TicketEntity {
 
     @Enumerated(EnumType.STRING)
     private TicketStatus status;
+
+
+    // para o evento parked Geo location
+    private Double lat;
+    private Double lng;
 }

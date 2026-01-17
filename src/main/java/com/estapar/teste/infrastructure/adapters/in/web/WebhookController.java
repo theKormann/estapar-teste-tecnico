@@ -1,6 +1,7 @@
 package com.estapar.teste.infrastructure.adapters.in.web;
 
 import com.estapar.teste.application.ports.in.EntryCommand;
+import com.estapar.teste.application.ports.in.ParkedCommand;
 import com.estapar.teste.application.ports.in.ParkingOperationsUseCase;
 import com.estapar.teste.domain.model.Ticket;
 import com.estapar.teste.infrastructure.adapters.in.web.dto.WebhookEventRequest;
@@ -26,7 +27,7 @@ public class WebhookController {
                 handleEntry(request);
                 break;
             case "PARKED":
-                log.info("🚧 Evento PARKED recebido (Lógica em construção). Lat: {}, Lng: {}", request.lat(), request.lng());
+                handleParked(request);
                 break;
             case "EXIT":
                 log.info("🚧 Evento EXIT recebido (Lógica em construção). Hora Saída: {}", request.exitTime());
@@ -49,5 +50,14 @@ public class WebhookController {
 
         Ticket ticket = parkingOperationsUseCase.handleEntry(command);
         log.info("✅ Ticket criado com sucesso: ID={}, Valor Base={}", ticket.getId(), ticket.getPricePerContext());
+    }
+
+    private void handleParked(WebhookEventRequest request) {
+        ParkedCommand command = new ParkedCommand(
+                request.licensePlate(),
+                request.lat(),
+                request.lng()
+        );
+        parkingOperationsUseCase.handleParked(command);
     }
 }
