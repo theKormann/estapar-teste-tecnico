@@ -17,13 +17,8 @@ public class TicketConfigRepositoryAdapter implements TicketRepositoryPort {
 
     @Override
     public Ticket save(Ticket ticket) {
-        // Reconhecendo como entidade
         TicketEntity entity = toEntity(ticket);
-
-        // Salvando no MySQL
         TicketEntity savedEntity = repository.save(entity);
-
-        // Convertendo Entity -> Domínio (com o ID gerado)
         return toDomain(savedEntity);
     }
 
@@ -33,10 +28,9 @@ public class TicketConfigRepositoryAdapter implements TicketRepositoryPort {
                 .map(this::toDomain);
     }
 
-    // Mappers (para o teste)
     private TicketEntity toEntity(Ticket domain) {
         TicketEntity entity = new TicketEntity();
-        entity.setId(domain.getId()); // Se for null (novo), o Hibernate gera
+        entity.setId(domain.getId());
         entity.setLicensePlate(domain.getLicensePlate());
         entity.setSector(domain.getSector());
         entity.setEntryTime(domain.getEntryTime());
@@ -44,6 +38,8 @@ public class TicketConfigRepositoryAdapter implements TicketRepositoryPort {
         entity.setPricePerContext(domain.getPricePerContext());
         entity.setFinalAmount(domain.getFinalAmount());
         entity.setStatus(domain.getStatus());
+        entity.setLat(domain.getLat());
+        entity.setLng(domain.getLng());
         return entity;
     }
 
@@ -56,12 +52,16 @@ public class TicketConfigRepositoryAdapter implements TicketRepositoryPort {
         );
 
         ticket.setId(entity.getId());
-        if(entity.getExitTime() != null) {
-            // força o status fechado se tiver data de saída
-            try {
-                ticket.setStatus(entity.getStatus());
-            } catch (Exception e) {}
+        ticket.setLat(entity.getLat());
+        ticket.setLng(entity.getLng());
+
+        // Mapeamento de dados de saída se existirem
+        if (entity.getExitTime() != null) {
+            ticket.setExitTime(entity.getExitTime());
+            ticket.setFinalAmount(entity.getFinalAmount());
+            ticket.setStatus(entity.getStatus());
         }
+
         return ticket;
     }
 }
