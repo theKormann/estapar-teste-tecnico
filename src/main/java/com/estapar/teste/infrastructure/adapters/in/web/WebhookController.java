@@ -1,6 +1,7 @@
 package com.estapar.teste.infrastructure.adapters.in.web;
 
 import com.estapar.teste.application.ports.in.*;
+import com.estapar.teste.application.ports.in.ExitUseCase;
 import com.estapar.teste.application.ports.in.EntryUseCase;
 import com.estapar.teste.application.ports.in.ParkedUseCase;
 import com.estapar.teste.domain.model.Ticket;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j // logs do lombok
 public class WebhookController {
 
+    private final ExitUseCase exitUseCase;
     private final ParkedUseCase parkedUseCase;
     private final EntryUseCase entryUseCase;
 
@@ -31,7 +33,10 @@ public class WebhookController {
                 handleParked(request);
                 break;
             case "EXIT":
-                log.info("🚧 Evento EXIT recebido (Lógica em construção). Hora Saída: {}", request.exitTime());
+                exitUseCase.handleExit(new ExitCommand(
+                        request.licensePlate(),
+                        request.exitTime()
+                ));
                 break;
             default:
                 log.warn("⚠️ Tipo de evento desconhecido: {}", request.eventType());
@@ -60,5 +65,15 @@ public class WebhookController {
                 request.lng()
         );
         parkedUseCase.handleParked(command);
+    }
+    // Mesma coisa para o EXIT
+    private void handleExit(WebhookEventRequest request) {
+        ExitCommand command = new ExitCommand(
+                request.licensePlate(),
+                request.exitTime()
+        );
+
+        // CORREÇÃO: Use 'exitUseCase' (a variável)
+        exitUseCase.handleExit(command);
     }
 }
